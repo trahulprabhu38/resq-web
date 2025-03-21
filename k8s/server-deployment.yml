@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: server
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: server
@@ -17,6 +17,9 @@ spec:
         image: trahulprabhu38/resq-backend:latest
         ports:
         - containerPort: 5000
+        env:
+        - name: MONGO_URI
+          value: "mongodb://mongo-service:27017/resqdb"
 ---
 apiVersion: v1
 kind: Service
