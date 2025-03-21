@@ -18,8 +18,9 @@ spec:
         ports:
         - containerPort: 5000
         env:
-        - name: MONGO_URI
-          value: "mongodb://mongo-service:27017/resqdb"
+          - name: MONGO_URI
+            value: "mongodb://mongo-service:27017/resq"
+
 ---
 apiVersion: v1
 kind: Service
