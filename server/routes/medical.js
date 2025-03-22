@@ -47,6 +47,25 @@ const checkStaffAccess = async (req, res, next) => {
     }
 };
 
+// Function to generate emergency access token
+const generateEmergencyToken = (medicalInfoId) => {
+    return jwt.sign(
+        {
+            type: 'emergency_access',
+            medicalInfoId: medicalInfoId.toString()
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '365d' } // Token valid for 1 year
+    );
+};
+
+// Function to generate emergency QR code
+const generateEmergencyQRCode = async (medicalInfoId) => {
+    const token = generateEmergencyToken(medicalInfoId);
+    // Generate a direct data URL that contains just the token
+    return await QRCode.toDataURL(token);
+};
+
 // Handle QR code scan - receives patient ID directly
 router.post('/scan', auth, checkStaffAccess, async (req, res) => {
     try {
@@ -152,6 +171,9 @@ router.get('/patient/me', auth, async (req, res) => {
             return res.json(emptyTemplate);
         }
 
+        // Generate emergency QR code with just the token
+        const emergencyQRCode = await generateEmergencyQRCode(medicalInfo._id);
+
         res.json({
             _id: medicalInfo._id,
             bloodType: medicalInfo.bloodType,
@@ -159,10 +181,7 @@ router.get('/patient/me', auth, async (req, res) => {
             medications: medicalInfo.medications,
             conditions: medicalInfo.conditions,
             emergencyContact: medicalInfo.emergencyContact,
-            qrCode: JSON.stringify({
-                __v: 4,
-                patientId: medicalInfo.patient._id.toString()
-            }),
+            emergencyQRCode: emergencyQRCode,  // This will be a data URL containing just the token
             lastUpdated: medicalInfo.lastUpdated,
             patient: medicalInfo.patient._id,
             patientName: medicalInfo.patient.name,
@@ -466,6 +485,128 @@ router.get('/staff-status', auth, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error checking staff status',
+            error: error.message
+        });
+    }
+});
+
+
+router.post('/patient-scan',auth, async (req, res) => {
+    try {
+        const patientId = req.body.patientId || req.body.data;
+
+        if (!patientId) {
+            return res.status(400).json({
+                success: false,
+                message: 'Patient ID is required'
+            });
+        }
+
+        console.log('Processing patient scan request for patient:', patientId);
+
+        // Get medical info using patient ID
+        const medicalInfo = await MedicalInfo.findOne({ patient: patientId })
+            .populate('patient', 'name email')
+            .lean();
+
+        if (!medicalInfo) {
+            console.log('No medical info found for patient:', patientId);
+            return res.status(404).json({
+                success: false,
+                message: 'Medical information not found'
+            });
+        }
+
+        console.log('Medical info found');
+
+        // Format and return only emergency info
+        const response = {
+            success: true,
+            data: {
+                patient: {
+                    name: medicalInfo.patient.name
+                },
+                bloodType: medicalInfo.bloodType || '',
+                emergencyContact: medicalInfo.emergencyContact || {},
+                lastUpdated: medicalInfo.lastUpdated
+            }
+        };
+
+        console.log('Sending formatted emergency info response');
+        res.json(response);
+
+    } catch (error) {
+        console.error('Error processing patient scan:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing scan',
+            error: error.message
+        });
+    }
+});
+
+// Get all patient data for frontend
+router.get('/patient-data', auth, async (req, res) => {
+    try {
+        console.log('Fetching all patient data for frontend');
+
+        // Get all medical info records
+        const allMedicalInfo = await MedicalInfo.find({})
+            .populate('patient', 'name email')
+            .select('-accessLog')  // Exclude access logs for privacy
+            .lean();
+
+        if (!allMedicalInfo || allMedicalInfo.length === 0) {
+            console.log('No patient data found');
+            return res.json({
+                success: true,
+                data: []
+            });
+        }
+
+        // Format the response with essential information
+        const formattedData = await Promise.all(allMedicalInfo.map(async (info) => {
+            // Generate emergency QR code for each patient
+            const emergencyQRCode = await generateEmergencyQRCode(info._id);
+
+            return {
+                _id: info._id,
+                patient: {
+                    id: info.patient?._id || '',
+                    name: info.patient?.name || 'Unknown',
+                    email: info.patient?.email || ''
+                },
+                bloodType: info.bloodType || '',
+                emergencyContact: {
+                    name: info.emergencyContact?.name || '',
+                    relationship: info.emergencyContact?.relationship || '',
+                    phone: info.emergencyContact?.phone || ''
+                },
+                allergies: info.allergies || [],
+                medications: info.medications || [],
+                conditions: info.conditions || [],
+                insuranceInfo: {
+                    provider: info.insuranceInfo?.provider || '',
+                    policyNumber: info.insuranceInfo?.policyNumber || '',
+                    groupNumber: info.insuranceInfo?.groupNumber || ''
+                },
+                emergencyQRCode: emergencyQRCode,
+                lastUpdated: info.lastUpdated || new Date()
+            };
+        }));
+
+        console.log(`Found ${formattedData.length} patient records`);
+
+        res.json({
+            success: true,
+            data: formattedData
+        });
+
+    } catch (error) {
+        console.error('Error fetching patient data:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching patient data',
             error: error.message
         });
     }

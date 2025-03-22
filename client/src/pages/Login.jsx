@@ -54,7 +54,7 @@ const Login = () => {
 
     try {
       console.log('Attempting login with:', { email, role });
-      const response = await login(email, password);
+      const response = await login(email, password,role);
       console.log('Login successful:', response);
       
       // Route based on role

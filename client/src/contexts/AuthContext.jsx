@@ -52,11 +52,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (email, password,role) => {
     try {
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/auth/login`, {
         email,
-        password
+        password,
+        role
       });
       
       const { token: newToken, user: newUser } = response.data;

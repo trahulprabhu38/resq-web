@@ -33,6 +33,7 @@ const connectDB = async () => {
     mongoose.set('strictQuery', false);
 
     await mongoose.connect(process.env.MONGODB_URI, {});
+    console.log(process.env.MONGODB_URI)
 
     console.log('✅ MongoDB Connected Successfully');
   } catch (error) {
