@@ -63,7 +63,7 @@ const Login = () => {
       } else if (response.user.role === 'medical_staff') {
         navigate('/dashboard');
       } else {
-        navigate('/medical-info');
+        navigate('/dashboard');
       }
     } catch (err) {
       console.error('Login error:', err);

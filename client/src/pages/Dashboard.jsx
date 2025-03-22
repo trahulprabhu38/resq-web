@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Paper,
@@ -11,6 +11,8 @@ import {
   Divider,
   Chip,
   Tooltip,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -18,6 +20,7 @@ import QrCodeIcon from '@mui/icons-material/QrCode';
 import PersonIcon from '@mui/icons-material/Person';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import GppMaybeIcon from '@mui/icons-material/GppMaybe';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import PageWrapper from '../components/PageWrapper';
 
 const Dashboard = () => {
@@ -25,65 +28,94 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const renderPatientDashboard = () => (
-    <Grid container spacing={3} sx={{ flex: 1 }}>
-      <Grid item xs={12} md={4}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <PersonIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-              <Typography variant="h6">Profile Information</Typography>
-            </Box>
-            <Typography variant="body1">Name: {user?.name}</Typography>
-            <Typography variant="body1">Email: {user?.email}</Typography>
-            <Typography variant="body1">Role: {user?.role}</Typography>
-          </CardContent>
-        </Card>
+    <>
+      <Grid container spacing={3} sx={{ flex: 1, mb: 3 }}>
+        <Grid item xs={12} md={4}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <PersonIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6">Profile Information</Typography>
+              </Box>
+              <Typography variant="body1">Name: {user?.name}</Typography>
+              <Typography variant="body1">Email: {user?.email}</Typography>
+              <Typography variant="body1">Role: {user?.role}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <LocalHospitalIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6">Medical Information</Typography>
+              </Box>
+              <Typography variant="body1" paragraph>
+                Manage your medical information, including blood type, allergies, medications, and more.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => navigate('/medical-info')}
+              >
+                View/Edit Medical Info
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <QrCodeIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6">Your QR Code</Typography>
+              </Box>
+              <Typography variant="body1" paragraph>
+                Access your medical QR code to share with medical staff in case of emergency at incredible speed.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                fullWidth
+                onClick={() => navigate('/medical-info')}
+              >
+                View QR Code
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
 
-      <Grid item xs={12} md={4}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <LocalHospitalIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-              <Typography variant="h6">Medical Information</Typography>
-            </Box>
-            <Typography variant="body1" paragraph>
-              Manage your medical information, including blood type, allergies, medications, and more.
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => navigate('/medical-info')}
-            >
-              View/Edit Medical Info
-            </Button>
-          </CardContent>
-        </Card>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <BarChartIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
+                <Typography variant="h6">Health Analytics Dashboard</Typography>
+              </Box>
+              <Typography variant="body1" paragraph>
+                View your detailed health analytics and insights through our interactive dashboard.
+              </Typography>
+              <Button
+                variant="contained"
+                color="primary"
+                size="large"
+                fullWidth
+                startIcon={<BarChartIcon />}
+                onClick={() => window.open('https://checkup-bot.streamlit.app/', '_blank')}
+                sx={{ mt: 2 }}
+              >
+                Open Health Analytics Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
       </Grid>
-
-      <Grid item xs={12} md={4}>
-        <Card sx={{ height: '100%' }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <QrCodeIcon sx={{ fontSize: 40, color: 'primary.main', mr: 2 }} />
-              <Typography variant="h6">Your QR Code</Typography>
-            </Box>
-            <Typography variant="body1" paragraph>
-              Access your medical QR code to share with medical staff in case of emergency.
-            </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={() => navigate('/medical-info')}
-            >
-              View QR Code
-            </Button>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+    </>
   );
 
   const renderStaffDashboard = () => (
